@@ -51,10 +51,16 @@ public class PrasDB {
      * @param key
      */
     public static void unset(String key) {
-        String value = getMapByContext().get(key);
-        if(value != null) {
-            getMapByContext().remove(key);
-            updateNumEqualTo(value, false);
+        Map<String, String> mapInContext = getMapByContext();
+        boolean isKeyPresent = mapInContext.containsKey(key);
+        if (isKeyPresent) {
+            if (isTransactionScope()) {
+                mapInContext.put(key, null);
+            }
+            else {
+                mapInContext.remove(key);
+            }
+            updateNumEqualTo(mapInContext.get(key), false);
         }
     }
 
@@ -95,10 +101,17 @@ public class PrasDB {
      */
     public static void commitTransaction() {
         Map<String, String> transactionMap = transactionStack.pop();
-        for (Map.Entry<String, String> entry : transactionMap.entrySet()) {
-            set(entry.getKey(), entry.getValue());
-        }
         transactionStack.clear();
+        for (Map.Entry<String, String> entry : transactionMap.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            if(value == null) {
+                unset(key);
+            }
+            else {
+                set(key, value);
+            }
+        }
     }
 
     /**
@@ -121,10 +134,18 @@ public class PrasDB {
      * @return
      */
     private static Map<String,String> getMapByContext() {
-        // check if the transaction stack has elements, if not return the main DB Map.
-        if (!transactionStack.empty()) {
-            return transactionStack.peek();
-        }
-        return prasDBMap;
+        return isTransactionScope() ? transactionStack.peek() : prasDBMap;
     }
+
+    /**
+     * returns is there is a transaction in progress.
+     * @return
+     */
+    private static boolean isTransactionScope() {
+        if(transactionStack.empty()) {
+            return false;
+        }
+        return true;
+    }
+
 }
