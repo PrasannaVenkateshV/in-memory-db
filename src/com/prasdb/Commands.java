@@ -9,7 +9,7 @@ public enum Commands {
     //(command name, command type, Number of parameters, Documentation)
     BEGIN ("BEGIN", "COMMON", 0,"Open a new transaction block. Transaction blocks can be nested; a BEGIN can be issued inside of an existing block.") {
         public Optional<String> execute(Optional<String> key, Optional<String> value) {
-            System.out.println("Starting Transaction ...");
+            PrasDB.beginTransaction();
             return Optional.empty();
         }
     },
@@ -21,14 +21,13 @@ public enum Commands {
     },
     COMMIT("COMMIT", "TRANSACTION", 0, "Close all open transaction blocks, permanently applying the changes made in them. Print nothing if successful, or print NO TRANSACTION if no transaction is in progress.") {
         public Optional<String> execute(Optional<String> key, Optional<String> value) {
-            System.out.println("Committed Transaction");
+            PrasDB.commitTransaction();
             return Optional.empty();
         }
     },
     ROLLBACK("ROLLBACK", "TRANSACTION", 0, "Undo all of the commands issued in the most recent transaction block, and close the block. Print nothing if successful, or print NO TRANSACTION if no transaction is in progress.") {
         public Optional<String> execute(Optional<String> key, Optional<String> value) {
-            System.out.println("Rolled Back Transaction");
-            return Optional.empty();
+            return PrasDB.rollbackTransaction();
         }
     },
     GET("GET", "DATA", 1, "Print out the value of the variable name, or NULL if that variable is not set.") {
@@ -50,7 +49,7 @@ public enum Commands {
     },
     NUMEQUALTO("NUMEQUALTO", "DATA", 1, "Print out the number of variables that are currently set to value. If no variables equal that value, print 0."){
         public Optional<String> execute(Optional<String> key, Optional<String> value) {
-            return Optional.of(String.valueOf(PrasDB.numOccurancesOfValue(getOptionalData(key))));
+            return Optional.of(String.valueOf(PrasDB.getNumEqualTo(getOptionalData(key))));
         }
     };
 
